@@ -56,7 +56,13 @@ public class NemotronEmbeddingService {
         return embedBatch(List.of(requireText(text)), "passage").get(0);
     }
 
-    /** One API call for a page of passages; useful for backfilling older records. */
+    /** Batch query embeddings for LOST reports. */
+    public List<float[]> embedQueries(List<String> texts) {
+        if (texts == null || texts.isEmpty()) return List.of();
+        return embedBatch(texts.stream().map(this::requireText).toList(), "query");
+    }
+
+    /** Batch passage embeddings for FOUND reports. */
     public List<float[]> embedPassages(List<String> texts) {
         if (texts == null || texts.isEmpty()) return List.of();
         return embedBatch(texts.stream().map(this::requireText).toList(), "passage");
