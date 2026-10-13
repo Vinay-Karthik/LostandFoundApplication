@@ -8,9 +8,9 @@ import com.campustrack.mapper.UserMapper;
 import com.campustrack.repository.UserRepository;
 import com.campustrack.security.JwtTokenProvider;
 import com.campustrack.security.UserDetailsImpl;
+import com.campustrack.validator.CampusEmailValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,12 +18,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
 
+/**
+ * Service managing user authentication, registration, and credentials.
+ * Single Responsibility: Execute login, register new accounts with OTP validation,
+ * and generate JWT authentication tokens.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -33,32 +35,22 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
-    private final ImageStorageService imageStorageService;
     private final UserMapper userMapper;
     private final OtpService otpService;
-
-    @Value("${campustrack.campus.allowed-domains:gmail.com}")
-    private String allowedDomainsConfig;
+    private final CampusEmailValidator emailValidator;
+    private final UserService userService;
 
     public boolean isAllowedCampusEmail(String email) {
-        if (email == null || !email.contains("@")) {
-            return false;
-        }
-        String domain = email.substring(email.indexOf("@") + 1).toLowerCase().trim();
-        List<String> allowedDomains = Arrays.stream(allowedDomainsConfig.split(","))
-                .map(String::trim)
-                .map(String::toLowerCase)
-                .toList();
-
-        return allowedDomains.stream().anyMatch(d -> domain.equals(d) || domain.endsWith("." + d));
+        return emailValidator.isAllowedCampusEmail(email);
     }
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         String email = request.getEmail().trim().toLowerCase();
 
-        if (!isAllowedCampusEmail(email)) {
-            throw new BadRequestException("Registration is restricted to campus emails only (@" + allowedDomainsConfig + ")");
+        if (!emailValidator.isAllowedCampusEmail(email)) {
+            throw new BadRequestException("Registration is restricted to campus emails only (@"
+                    + emailValidator.getAllowedDomainsDescription() + ")");
         }
 
         if (userRepository.existsByEmail(email)) {
@@ -95,6 +87,7 @@ public class AuthService {
         UserDetailsImpl userDetails = UserDetailsImpl.build(savedUser);
         String token = jwtTokenProvider.generateToken(userDetails);
 
+        log.info("Registered new user: {} (role: {}, verified: {})", email, role, verified);
         return userMapper.toAuthResponse(savedUser, token);
     }
 
@@ -112,66 +105,33 @@ public class AuthService {
         if (user != null && Boolean.TRUE.equals(user.getSuspended())) {
             throw new UnauthorizedException("Your account has been suspended by campus administration.");
         }
+
+        log.info("User {} successfully logged in", email);
         return userMapper.toAuthResponse(user, token);
     }
 
-    @Transactional(readOnly = true)
-    public UserDTO getCurrentUserProfile() {
-        UserDetailsImpl userDetails = getCurrentUserDetails();
-        User user = userRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        return userMapper.toUserDTO(user);
-    }
-
-    @Transactional
-    public UserDTO updateProfile(UpdateProfileRequest request) {
-        User user = getCurrentUserEntity();
-        if (request.getName() != null && !request.getName().isBlank()) {
-            user.setName(request.getName().trim());
-        }
-        if (request.getAvatarUrl() != null) {
-            user.setAvatarUrl(request.getAvatarUrl().trim());
-        }
-        User saved = userRepository.save(user);
-
-        return userMapper.toUserDTO(saved);
-    }
-
-    @Transactional
-    public UserDTO uploadAvatar(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BadRequestException("Please select an image file to upload");
-        }
-        User user = getCurrentUserEntity();
-        String avatarUrl = imageStorageService.storeImage(file);
-        user.setAvatarUrl(avatarUrl);
-        User saved = userRepository.save(user);
-
-        return userMapper.toUserDTO(saved);
-    }
-
-    @Transactional
-    public void changePassword(ChangePasswordRequest request) {
-        User user = getCurrentUserEntity();
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            throw new BadRequestException("Current password is incorrect");
-        }
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
+    // Delegations to UserService for backwards compatibility and clean interface segregation
+    public User getCurrentUserEntity() {
+        return userService.getCurrentUserEntity();
     }
 
     public UserDetailsImpl getCurrentUserDetails() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
-            throw new UnauthorizedException("User is not authenticated");
-        }
-        return (UserDetailsImpl) authentication.getPrincipal();
+        return userService.getCurrentUserDetails();
     }
 
-    public User getCurrentUserEntity() {
-        UserDetailsImpl userDetails = getCurrentUserDetails();
-        return userRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userDetails.getId()));
+    public UserDTO getCurrentUserProfile() {
+        return userService.getCurrentUserProfile();
+    }
+
+    public UserDTO updateProfile(UpdateProfileRequest request) {
+        return userService.updateProfile(request);
+    }
+
+    public void changePassword(ChangePasswordRequest request) {
+        userService.changePassword(request);
+    }
+
+    public UserDTO uploadAvatar(org.springframework.web.multipart.MultipartFile file) {
+        return userService.uploadAvatar(file);
     }
 }

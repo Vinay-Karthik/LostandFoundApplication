@@ -38,12 +38,11 @@ public class AdminService {
 
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
-    private final FlagRepository flagRepository;
     private final MatchRepository matchRepository;
+    private final FlagService flagService;
     private final UserMapper userMapper;
     private final ItemMapper itemMapper;
     private final MatchMapper matchMapper;
-    private final FlagMapper flagMapper;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     // --- User Management ---
@@ -334,45 +333,19 @@ public class AdminService {
         return matchMapper.toResponse(saved, null);
     }
 
-    // --- Flags & Reports Moderation ---
+    // --- Flags & Reports Moderation (Delegated to FlagService) ---
     @Transactional
     public FlagResponse createFlag(CreateFlagRequest request, User currentUser) {
-        LostFoundItem item = itemRepository.findById(request.getItemId())
-                .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + request.getItemId()));
-
-        Flag flag = Flag.builder()
-                .item(item)
-                .reportedBy(currentUser)
-                .reason(request.getReason().trim())
-                .reviewed(false)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        Flag saved = flagRepository.save(flag);
-        return flagMapper.toResponse(saved);
+        return flagService.createFlag(request, currentUser);
     }
 
     @Transactional(readOnly = true)
     public List<FlagResponse> getUnreviewedFlags() {
-        return flagRepository.findByReviewedFalseOrderByCreatedAtDesc().stream()
-                .map(flagMapper::toResponse)
-                .toList();
+        return flagService.getUnreviewedFlags();
     }
 
     @Transactional
     public FlagResponse resolveFlag(Long flagId, ResolveFlagRequest request) {
-        Flag flag = flagRepository.findById(flagId)
-                .orElseThrow(() -> new ResourceNotFoundException("Flag not found with id: " + flagId));
-
-        flag.setReviewed(true);
-        Flag saved = flagRepository.save(flag);
-
-        if (request.isRemoveItem() && flag.getItem() != null) {
-            flag.getItem().setStatus(ItemStatus.REMOVED.name());
-            itemRepository.save(flag.getItem());
-            log.info("Admin soft-deleted item {} during flag resolution", flag.getItem().getId());
-        }
-
-        return flagMapper.toResponse(saved);
+        return flagService.resolveFlag(flagId, request);
     }
 }

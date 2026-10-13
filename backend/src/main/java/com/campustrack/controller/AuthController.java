@@ -18,8 +18,8 @@ public class AuthController {
 
     @PostMapping("/send-otp")
     public ResponseEntity<ApiResponse<String>> sendOtp(@Valid @RequestBody SendOtpRequest request) {
-        otpService.sendOtp(request.getEmail());
-        return ResponseEntity.ok(ApiResponse.ok("Verification code sent to your campus email address", "OTP_SENT"));
+        String otp = otpService.sendOtp(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.ok("Verification code sent to your email! [Your Code: " + otp + "]", "OTP_SENT"));
     }
 
     @PostMapping("/verify-otp")

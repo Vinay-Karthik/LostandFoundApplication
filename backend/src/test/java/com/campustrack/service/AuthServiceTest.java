@@ -5,6 +5,7 @@ import com.campustrack.exception.CustomExceptions.BadRequestException;
 import com.campustrack.mapper.UserMapper;
 import com.campustrack.repository.UserRepository;
 import com.campustrack.security.JwtTokenProvider;
+import com.campustrack.validator.CampusEmailValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,14 +29,15 @@ public class AuthServiceTest {
     private AuthenticationManager authenticationManager;
 
     @Mock
-    private ImageStorageService imageStorageService;
+    private OtpService otpService;
 
     @Mock
-    private OtpService otpService;
+    private UserService userService;
 
     private JwtTokenProvider jwtTokenProvider;
     private PasswordEncoder passwordEncoder;
     private UserMapper userMapper;
+    private CampusEmailValidator emailValidator;
     private AuthService authService;
 
     @BeforeEach
@@ -46,8 +48,8 @@ public class AuthServiceTest {
                 "CampusTrackSuperSecretJwtSigningKeyMustBe256BitsLongForHmacSha256Security2026",
                 86400000
         );
-        authService = new AuthService(userRepository, passwordEncoder, authenticationManager, jwtTokenProvider, imageStorageService, userMapper, otpService);
-        ReflectionTestUtils.setField(authService, "allowedDomainsConfig", "university.edu,campus.edu,student.edu");
+        emailValidator = new CampusEmailValidator("university.edu,campus.edu,student.edu");
+        authService = new AuthService(userRepository, passwordEncoder, authenticationManager, jwtTokenProvider, userMapper, otpService, emailValidator, userService);
     }
 
     @Test

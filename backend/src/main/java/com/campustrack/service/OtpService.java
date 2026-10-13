@@ -26,12 +26,10 @@ public class OtpService {
 
     private final UserRepository userRepository;
     private final JavaMailSender mailSender;
+    private final com.campustrack.validator.CampusEmailValidator emailValidator;
 
-    @Value("${spring.mail.username:noreply@svce.edu.in}")
+    @Value("${spring.mail.username:vinaykarthikkarthik@gmail.com}")
     private String senderEmail;
-
-   @Value("${campustrack.campus.allowed-domains:gmail.com}")
-private String allowedDomainsConfig;
 
     private static final long OTP_VALIDITY_SECONDS = 300; // 5 minutes
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -46,7 +44,7 @@ private String allowedDomainsConfig;
 
     private final ConcurrentHashMap<String, OtpEntry> otpCache = new ConcurrentHashMap<>();
 
-    public void sendOtp(String email) {
+    public String sendOtp(String email) {
         String cleanEmail = email.trim().toLowerCase();
 
         // 1. Validate Campus Domain
@@ -62,7 +60,9 @@ private String allowedDomainsConfig;
         Instant expiresAt = Instant.now().plusSeconds(OTP_VALIDITY_SECONDS);
 
         otpCache.put(cleanEmail, new OtpEntry(otp, expiresAt, false));
-        log.info("Generated OTP for {}: {} (Expires in 5 minutes)", cleanEmail, otp);
+        log.info("=================================================");
+        log.info("  CAMPUS TRACK VERIFICATION OTP FOR {}: {}", cleanEmail, otp);
+        log.info("=================================================");
 
         // 4. Send Email via SMTP asynchronously
         java.util.concurrent.CompletableFuture.runAsync(() -> {
@@ -70,9 +70,11 @@ private String allowedDomainsConfig;
                 sendOtpEmail(cleanEmail, otp);
                 log.info("OTP verification email successfully dispatched to {}", cleanEmail);
             } catch (Exception e) {
-                log.error("Failed to send OTP email to {}: {}", cleanEmail, e.getMessage());
+                log.error("Failed to send OTP email to {}: {}. Note: Check your terminal for the generated OTP code.", cleanEmail, e.getMessage());
             }
         });
+
+        return otp;
     }
 
     public boolean verifyOtp(String email, String otp) {
@@ -109,18 +111,9 @@ private String allowedDomainsConfig;
     }
 
     private void validateCampusDomain(String email) {
-        if (!email.contains("@")) {
-            throw new BadRequestException("Invalid email format");
-        }
-        String domain = email.substring(email.indexOf('@') + 1).toLowerCase();
-        List<String> allowed = Arrays.stream(allowedDomainsConfig.split(","))
-                .map(String::trim)
-                .map(String::toLowerCase)
-                .toList();
-
-        boolean isAllowed = allowed.stream().anyMatch(d -> domain.equals(d) || domain.endsWith("." + d));
-        if (!isAllowed) {
-            throw new BadRequestException("Registration is restricted to official campus email addresses (" + allowedDomainsConfig + ")");
+        if (!emailValidator.isAllowedCampusEmail(email)) {
+            throw new BadRequestException("Registration is restricted to official campus email addresses ("
+                    + emailValidator.getAllowedDomainsDescription() + ")");
         }
     }
 
