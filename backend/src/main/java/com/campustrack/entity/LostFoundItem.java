@@ -1,5 +1,6 @@
 package com.campustrack.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -50,6 +51,32 @@ public class LostFoundItem {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    // Stored separately from DTOs and never exposed in the public API JSON.
+    @JsonIgnore
+    @Lob
+    @Column(name = "embedding_json")
+    private String embeddingJson;
+
+    @JsonIgnore
+    @Column(name = "embedding_model_version", length = 160)
+    private String embeddingModelVersion;
+
+    /**
+     * Stable representation used to generate passage embeddings.
+     * Excludes personal data such as the reporter's name and user ID.
+     */
+    public String toEmbeddingText() {
+        return "Item: " + safe(title)
+                + ". Description: " + safe(description)
+                + ". Category: " + safe(category)
+                + ". Tags: " + safe(tags)
+                + ". Location: " + safe(location);
+    }
+
+    private static String safe(String value) {
+        return value == null || value.isBlank() ? "not specified" : value.trim();
+    }
 
     @PrePersist
     protected void onCreate() {

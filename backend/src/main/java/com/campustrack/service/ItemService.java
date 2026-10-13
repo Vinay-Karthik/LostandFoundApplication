@@ -36,6 +36,7 @@ public class ItemService {
     private final ImageStorageService imageStorageService;
     private final ItemMapper itemMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final NemotronEmbeddingService nemotronEmbeddingService;
 
     public static final List<String> SEED_CATEGORIES = List.of(
             "Electronics", "Documents", "Clothing", "Accessories", "Keys", "Bags", "Other"
@@ -75,6 +76,9 @@ public class ItemService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
+        // Preserve item posting when NVIDIA is temporarily unavailable; in that case
+        // matching continues with the existing heuristic rules.
+        refreshEmbedding(item);
         LostFoundItem savedItem = itemRepository.save(item);
 
         // Run smart matching against opposite type items
@@ -153,23 +157,29 @@ public class ItemService {
             throw new ForbiddenException("You are not allowed to edit this item");
         }
 
+        boolean searchableFieldsChanged = false;
         if (request.getTitle() != null && !request.getTitle().isBlank()) {
             item.setTitle(request.getTitle().trim());
+            searchableFieldsChanged = true;
         }
         if (request.getDescription() != null) {
             item.setDescription(request.getDescription());
+            searchableFieldsChanged = true;
         }
         if (request.getDateReported() != null) {
             item.setDateReported(request.getDateReported());
         }
         if (request.getLocation() != null) {
             item.setLocation(request.getLocation().trim());
+            searchableFieldsChanged = true;
         }
         if (request.getCategory() != null) {
             item.setCategory(request.getCategory().trim());
+            searchableFieldsChanged = true;
         }
         if (request.getTags() != null) {
             item.setTags(normalizeTags(request.getTags()));
+            searchableFieldsChanged = true;
         }
         if (request.getStatus() != null) {
             ItemStatus parsedStatus = ItemStatus.fromString(request.getStatus());
@@ -182,6 +192,10 @@ public class ItemService {
             item.setImageUrl(imageStorageService.storeImage(imageFile));
         } else if (request.getImageUrl() != null) {
             item.setImageUrl(request.getImageUrl());
+        }
+
+        if (searchableFieldsChanged) {
+            refreshEmbedding(item);
         }
 
         LostFoundItem saved = itemRepository.save(item);
@@ -203,6 +217,23 @@ public class ItemService {
 
     public List<String> getCategories() {
         return SEED_CATEGORIES;
+    }
+
+    private void refreshEmbedding(LostFoundItem item) {
+        try {
+            // Nemotron is asymmetric: LOST is the retrieval query, FOUND is the passage.
+            float[] vector = "LOST".equalsIgnoreCase(item.getType())
+                    ? nemotronEmbeddingService.embedQuery(item.toEmbeddingText())
+                    : nemotronEmbeddingService.embedPassage(item.toEmbeddingText());
+            item.setEmbeddingJson(nemotronEmbeddingService.serialize(vector));
+            item.setEmbeddingModelVersion(nemotronEmbeddingService.getModel());
+        } catch (NemotronEmbeddingService.EmbeddingUnavailableException ex) {
+            // Clear stale vectors on updates. Rule-based matching remains available.
+            item.setEmbeddingJson(null);
+            item.setEmbeddingModelVersion(null);
+            log.warn("Nemotron embedding unavailable for item {}: {}",
+                    item.getId() == null ? "(new)" : item.getId(), ex.getMessage());
+        }
     }
 
     private ItemResponse mapToResponse(LostFoundItem item, Long currentUserId) {
