@@ -31,8 +31,9 @@ public class EmbeddingBackfillService {
         }
         int pageSize = Math.max(1, Math.min(requestedSize, MAX_BATCH_SIZE));
 
-        Page<LostFoundItem> page = itemRepository.findAll(
-                PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.ASC, "id")));
+        // Only OPEN records participate in new match generation.
+        Page<LostFoundItem> page = itemRepository.findByStatus(
+                "OPEN", PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.ASC, "id")));
 
         List<LostFoundItem> pending = new ArrayList<>();
         int skipped = 0;
@@ -50,13 +51,24 @@ public class EmbeddingBackfillService {
         }
 
         if (!pending.isEmpty()) {
-            List<float[]> vectors = embeddings.embedPassages(
-                    pending.stream().map(LostFoundItem::toEmbeddingText).toList());
+            // Respect the model's asymmetric training: lost reports are queries;
+            // found reports are passages. Do not mix input_type values in a batch.
+            List<LostFoundItem> lostItems = pending.stream()
+                    .filter(item -> "LOST".equalsIgnoreCase(item.getType()))
+                    .toList();
+            List<LostFoundItem> foundItems = pending.stream()
+                    .filter(item -> !"LOST".equalsIgnoreCase(item.getType()))
+                    .toList();
 
-            for (int i = 0; i < pending.size(); i++) {
-                LostFoundItem item = pending.get(i);
-                item.setEmbeddingJson(embeddings.serialize(vectors.get(i)));
-                item.setEmbeddingModelVersion(embeddings.getModel());
+            if (!lostItems.isEmpty()) {
+                List<float[]> vectors = embeddings.embedQueries(
+                        lostItems.stream().map(LostFoundItem::toEmbeddingText).toList());
+                saveVectors(lostItems, vectors);
+            }
+            if (!foundItems.isEmpty()) {
+                List<float[]> vectors = embeddings.embedPassages(
+                        foundItems.stream().map(LostFoundItem::toEmbeddingText).toList());
+                saveVectors(foundItems, vectors);
             }
             itemRepository.saveAll(pending);
         }
@@ -65,6 +77,17 @@ public class EmbeddingBackfillService {
         return new BackfillResult(
                 pageNumber, page.getTotalPages(), page.getTotalElements(),
                 pending.size(), skipped, nextPage);
+    }
+
+    private void saveVectors(List<LostFoundItem> items, List<float[]> vectors) {
+        if (items.size() != vectors.size()) {
+            throw new IllegalStateException("Embedding count does not match item count");
+        }
+        for (int i = 0; i < items.size(); i++) {
+            LostFoundItem item = items.get(i);
+            item.setEmbeddingJson(embeddings.serialize(vectors.get(i)));
+            item.setEmbeddingModelVersion(embeddings.getModel());
+        }
     }
 
     public record BackfillResult(
