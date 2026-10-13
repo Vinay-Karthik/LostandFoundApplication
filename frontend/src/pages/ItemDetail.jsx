@@ -9,7 +9,7 @@ import { ReportModal } from '../components/ReportModal';
 import { ResolutionModal } from '../components/ResolutionModal';
 import { 
   MapPin, MessageSquare, 
-  Sparkles, AlertTriangle, ArrowLeft, Check, Edit3, ImageOff, Bookmark, CheckCircle2 
+  Sparkles, AlertTriangle, ArrowLeft, Check, Edit3, ImageOff, Bookmark, CheckCircle2, Trash2 
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -97,6 +97,23 @@ export const ItemDetail = () => {
       fetchItemData();
     } finally {
       setStatusUpdating(false);
+    }
+  };
+
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteItem = async () => {
+    if (window.confirm(`Are you sure you want to permanently delete "${item.title}"? This cannot be undone.`)) {
+      setDeleting(true);
+      try {
+        await itemApi.deleteItem(id);
+        navigate('/items/my-items');
+      } catch (err) {
+        console.error('Failed to delete item:', err);
+        alert(err.response?.data?.message || 'Failed to delete listing.');
+      } finally {
+        setDeleting(false);
+      }
     }
   };
 
@@ -405,6 +422,22 @@ export const ItemDetail = () => {
                     <Edit3 size={14} /> Update Listing Status
                   </button>
                 )}
+
+                <button
+                  onClick={handleDeleteItem}
+                  disabled={deleting}
+                  className="btn btn-secondary btn-sm"
+                  style={{
+                    color: 'var(--status-lost-text)',
+                    borderColor: 'rgba(239, 68, 68, 0.35)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                  }}
+                  title="Permanently Delete Listing"
+                >
+                  <Trash2 size={14} /> {deleting ? 'Deleting...' : 'Delete Listing'}
+                </button>
               </div>
             )}
 
@@ -435,15 +468,18 @@ export const ItemDetail = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {matches.map((match) => (
-              <MatchCard
-                key={match.id}
-                match={match}
-                onConfirm={handleConfirmMatch}
-                onReject={handleRejectMatch}
-                onStartChat={handleStartChat}
-              />
-            ))}
+            {matches
+              .filter((match) => match.lostItemId !== match.foundItemId)
+              .map((match) => (
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  currentItemId={item.id}
+                  onConfirm={handleConfirmMatch}
+                  onReject={handleRejectMatch}
+                  onStartChat={handleStartChat}
+                />
+              ))}
           </div>
         </section>
       )}

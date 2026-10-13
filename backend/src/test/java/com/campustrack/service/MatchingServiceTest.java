@@ -124,4 +124,41 @@ public class MatchingServiceTest {
         float score = matchingService.calculateMatchScore(lostKeys, foundCoat);
         assertTrue(score < 0.20f, "Expected low score for unrelated items, got: " + score);
     }
+
+    @Test
+    @DisplayName("An item must never match with itself (score must be 0.0)")
+    void testItemCannotMatchWithItself() {
+        LostFoundItem item = LostFoundItem.builder()
+                .id(10L)
+                .type("LOST")
+                .title("Earphones")
+                .description("Bluetooth headphone")
+                .category("Electronics")
+                .location("Auditorium")
+                .build();
+
+        float score = matchingService.calculateMatchScore(item, item);
+        assertEquals(0.0f, score, "An item compared to itself must always return 0.0 score");
+    }
+
+    @Test
+    @DisplayName("Items of the same type (LOST vs LOST) must never match")
+    void testSameTypeCannotMatch() {
+        LostFoundItem lost1 = LostFoundItem.builder()
+                .id(10L)
+                .type("LOST")
+                .title("Earphones")
+                .category("Electronics")
+                .build();
+
+        LostFoundItem lost2 = LostFoundItem.builder()
+                .id(20L)
+                .type("LOST")
+                .title("Earphones")
+                .category("Electronics")
+                .build();
+
+        float score = matchingService.calculateMatchScore(lost1, lost2);
+        assertEquals(0.0f, score, "Items of the same type must return 0.0 score");
+    }
 }

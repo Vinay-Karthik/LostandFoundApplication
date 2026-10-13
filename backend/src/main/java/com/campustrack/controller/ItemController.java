@@ -1,7 +1,6 @@
 package com.campustrack.controller;
 
-import com.campustrack.dto.ApiResponse;
-import com.campustrack.dto.ItemDTOs.*;
+import com.campustrack.dto.*;
 import com.campustrack.entity.User;
 import com.campustrack.security.UserDetailsImpl;
 import com.campustrack.service.AuthService;
@@ -151,6 +150,13 @@ public class ItemController {
         User currentUser = authService.getCurrentUserEntity();
         List<ItemResponse> response = itemService.getMyItems(currentUser.getId());
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @DeleteMapping("/items/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteItem(@PathVariable("id") Long id) {
+        User currentUser = authService.getCurrentUserEntity();
+        itemService.deleteItem(id, currentUser);
+        return ResponseEntity.ok(ApiResponse.ok("Item deleted successfully", "SUCCESS"));
     }
 
     @GetMapping("/categories")

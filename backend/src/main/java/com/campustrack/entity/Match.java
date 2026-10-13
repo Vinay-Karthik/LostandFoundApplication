@@ -29,8 +29,9 @@ public class Match {
     @Column(name = "match_score", nullable = false)
     private Float matchScore;
 
+    @Builder.Default
     @Column(nullable = false)
-    private String status; // 'SUGGESTED' | 'CONFIRMED' | 'REJECTED'
+    private String status = "SUGGESTED"; // 'SUGGESTED' | 'CONFIRMED' | 'REJECTED'
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

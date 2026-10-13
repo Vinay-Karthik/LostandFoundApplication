@@ -1,6 +1,6 @@
 package com.campustrack.service;
 
-import com.campustrack.dto.AuthDTOs.RegisterRequest;
+import com.campustrack.dto.RegisterRequest;
 import com.campustrack.exception.CustomExceptions.BadRequestException;
 import com.campustrack.mapper.UserMapper;
 import com.campustrack.repository.UserRepository;

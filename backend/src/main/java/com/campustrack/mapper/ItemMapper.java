@@ -1,6 +1,6 @@
 package com.campustrack.mapper;
 
-import com.campustrack.dto.ItemDTOs.ItemResponse;
+import com.campustrack.dto.ItemResponse;
 import com.campustrack.entity.LostFoundItem;
 import org.springframework.stereotype.Component;
 

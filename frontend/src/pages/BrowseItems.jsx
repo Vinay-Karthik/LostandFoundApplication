@@ -206,6 +206,33 @@ export const BrowseItems = () => {
         >
           Found Only
         </button>
+      </div>
+
+      {/* Category Quick Filter Chips with obvious active states */}
+      {categories.length > 0 && (
+        <div style={{ display: 'flex', gap: '0.45rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
+          <button
+            onClick={() => updateParam('category', '')}
+            className={`filter-chip ${!category ? 'active' : ''}`}
+            style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }}
+          >
+            All Categories
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => updateParam('category', category === cat ? '' : cat)}
+              className={`filter-chip ${category === cat ? 'active' : ''}`}
+              style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Active Filter Badges */}
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
 
         {category && (
           <span style={{

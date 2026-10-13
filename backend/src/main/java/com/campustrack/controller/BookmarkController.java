@@ -1,7 +1,7 @@
 package com.campustrack.controller;
 
 import com.campustrack.dto.ApiResponse;
-import com.campustrack.dto.ItemDTOs.ItemResponse;
+import com.campustrack.dto.ItemResponse;
 import com.campustrack.service.BookmarkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,6 +1,6 @@
 package com.campustrack.mapper;
 
-import com.campustrack.dto.FlagDTOs.FlagResponse;
+import com.campustrack.dto.FlagResponse;
 import com.campustrack.entity.Flag;
 import org.springframework.stereotype.Component;
 

@@ -1,6 +1,6 @@
 package com.campustrack.service;
 
-import com.campustrack.dto.ItemDTOs.*;
+import com.campustrack.dto.*;
 import com.campustrack.entity.LostFoundItem;
 import com.campustrack.entity.User;
 import com.campustrack.entity.enums.ItemStatus;
@@ -32,6 +32,8 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
     private final MatchRepository matchRepository;
+    private final com.campustrack.repository.BookmarkRepository bookmarkRepository;
+    private final com.campustrack.repository.FlagRepository flagRepository;
     private final MatchingService matchingService;
     private final ImageStorageService imageStorageService;
     private final ItemMapper itemMapper;
@@ -206,6 +208,26 @@ public class ItemService {
         return items.stream()
                 .map(i -> mapToResponse(i, userId))
                 .toList();
+    }
+
+    @Transactional
+    public void deleteItem(Long id, User currentUser) {
+        LostFoundItem item = itemRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + id));
+
+        boolean isOwner = currentUser != null && item.getUser() != null && item.getUser().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser != null && Role.ADMIN.name().equalsIgnoreCase(currentUser.getRole());
+
+        if (!isOwner && !isAdmin) {
+            throw new ForbiddenException("You are not authorized to delete this item");
+        }
+
+        bookmarkRepository.deleteByItemId(id);
+        flagRepository.deleteByItemId(id);
+        matchRepository.deleteMatchesByItemId(id);
+
+        itemRepository.delete(item);
+        log.info("User {} deleted item #{} ('{}')", currentUser != null ? currentUser.getEmail() : "system", id, item.getTitle());
     }
 
     public List<String> getCategories() {

@@ -1,9 +1,6 @@
 package com.campustrack.service;
 
-import com.campustrack.dto.AuthDTOs.*;
-import com.campustrack.dto.FlagDTOs.*;
-import com.campustrack.dto.ItemDTOs.*;
-import com.campustrack.dto.MatchDTOs.MatchResponse;
+import com.campustrack.dto.*;
 import com.campustrack.entity.Flag;
 import com.campustrack.entity.LostFoundItem;
 import com.campustrack.entity.Match;
@@ -39,6 +36,8 @@ public class AdminService {
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
     private final MatchRepository matchRepository;
+    private final com.campustrack.repository.BookmarkRepository bookmarkRepository;
+    private final com.campustrack.repository.FlagRepository flagRepository;
     private final FlagService flagService;
     private final UserMapper userMapper;
     private final ItemMapper itemMapper;
@@ -288,6 +287,10 @@ public class AdminService {
     public void deleteItem(Long itemId) {
         LostFoundItem item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
+
+        bookmarkRepository.deleteByItemId(itemId);
+        flagRepository.deleteByItemId(itemId);
+        matchRepository.deleteMatchesByItemId(itemId);
 
         itemRepository.delete(item);
         log.info("Admin deleted item with id: {}", itemId);

@@ -1,7 +1,6 @@
 package com.campustrack.controller;
 
-import com.campustrack.dto.ApiResponse;
-import com.campustrack.dto.AuthDTOs.*;
+import com.campustrack.dto.*;
 import com.campustrack.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

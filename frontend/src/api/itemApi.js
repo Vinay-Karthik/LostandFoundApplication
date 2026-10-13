@@ -11,6 +11,7 @@ export const itemApi = {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   updateItemJson: (id, data) => axiosClient.patch(`/items/${id}`, data),
+  deleteItem: (id) => axiosClient.delete(`/items/${id}`),
   getMyItems: () => axiosClient.get('/items/my-items'),
   getCategories: () => axiosClient.get('/categories'),
 };

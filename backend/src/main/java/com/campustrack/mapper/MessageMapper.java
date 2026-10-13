@@ -1,6 +1,6 @@
 package com.campustrack.mapper;
 
-import com.campustrack.dto.MessageDTOs.MessageResponse;
+import com.campustrack.dto.MessageResponse;
 import com.campustrack.entity.Message;
 import org.springframework.stereotype.Component;
 

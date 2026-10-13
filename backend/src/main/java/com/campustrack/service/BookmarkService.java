@@ -1,6 +1,6 @@
 package com.campustrack.service;
 
-import com.campustrack.dto.ItemDTOs.ItemResponse;
+import com.campustrack.dto.ItemResponse;
 import com.campustrack.entity.Bookmark;
 import com.campustrack.entity.LostFoundItem;
 import com.campustrack.entity.User;

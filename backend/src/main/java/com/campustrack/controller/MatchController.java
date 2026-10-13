@@ -1,7 +1,7 @@
 package com.campustrack.controller;
 
 import com.campustrack.dto.ApiResponse;
-import com.campustrack.dto.MatchDTOs.MatchResponse;
+import com.campustrack.dto.MatchResponse;
 import com.campustrack.entity.User;
 import com.campustrack.service.AuthService;
 import com.campustrack.service.MatchingService;

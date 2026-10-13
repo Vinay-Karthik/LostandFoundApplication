@@ -5,8 +5,8 @@ import { itemApi } from '../api/itemApi';
 import { ItemCard } from '../components/ItemCard';
 import { 
   Search, SlidersHorizontal, ShoppingBag, Laptop, 
-  Shirt, FileText, Watch, Key, Box, 
-  Sparkles, MessageCircle, AlertCircle, Plus 
+  Shirt, FileText, Watch, Key, Box, LayoutGrid, 
+  Sparkles, MessageCircle, AlertCircle, Plus, X 
 } from 'lucide-react';
 
 export const Home = () => {
@@ -14,12 +14,14 @@ export const Home = () => {
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const loadData = () => {
     Promise.all([
-      itemApi.getItems({ size: 6, status: 'OPEN' }),
+      itemApi.getItems({ size: 18, status: 'OPEN' }),
       itemApi.getCategories(),
     ]).then(([itemsRes, catRes]) => {
       if (itemsRes.success && itemsRes.data) {
@@ -55,8 +57,28 @@ export const Home = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    navigate(`/items?search=${encodeURIComponent(searchQuery)}`);
+    navigate(`/items?search=${encodeURIComponent(searchQuery)}${selectedCategory ? `&category=${encodeURIComponent(selectedCategory)}` : ''}`);
   };
+
+  const filteredItems = items.filter((item) => {
+    if (selectedCategory && item.category?.toLowerCase() !== selectedCategory.toLowerCase()) {
+      return false;
+    }
+    if (statusFilter !== 'ALL' && item.type !== statusFilter) {
+      return false;
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchTitle = item.title?.toLowerCase().includes(q);
+      const matchDesc = item.description?.toLowerCase().includes(q);
+      const matchCat = item.category?.toLowerCase().includes(q);
+      const matchLoc = item.location?.toLowerCase().includes(q);
+      if (!matchTitle && !matchDesc && !matchCat && !matchLoc) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   const getCategoryIcon = (name) => {
     const n = (name || '').toLowerCase();
@@ -279,14 +301,14 @@ export const Home = () => {
   // SCREEN 3: AUTHENTICATED STUDENT DASHBOARD
   // ==========================================
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* Dashboard Greeting Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {/* Dashboard Greeting Header (Point 1 & Point 2: single Report button & reduced spacing) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
             Hello, {user?.name ? user.name.split(' ')[0] : 'Student'} 👋
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.2rem' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.15rem' }}>
             What are you looking for today?
           </p>
         </div>
@@ -295,68 +317,172 @@ export const Home = () => {
           className="btn btn-primary"
           style={{ padding: '0.6rem 1.25rem', borderRadius: 'var(--radius-md)' }}
         >
-          <Plus size={16} strokeWidth={2.4} /> Report New
+          <Plus size={16} strokeWidth={2.4} /> Report Item
         </Link>
       </div>
 
-      {/* Search Bar */}
-      <form
-        onSubmit={handleSearch}
-        style={{
-          display: 'flex',
-          gap: '0.75rem',
-          alignItems: 'center',
-        }}
-      >
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.65rem',
-          backgroundColor: 'var(--bg-surface)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 'var(--radius-md)',
-          padding: '0.65rem 1rem',
-          boxShadow: 'var(--shadow-sm)',
-        }}>
-          <Search size={18} color="var(--text-muted)" />
-          <input
-            type="text"
-            placeholder="Search for items, categories or locations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              flex: 1,
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              color: 'var(--text-primary)',
-              fontSize: '0.9rem',
-            }}
-          />
+      {/* Search Bar & Quick Filter Pills (Point 2: reduced gap with greeting, Point 4 & 10: functional search & clear) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <form
+          onSubmit={handleSearch}
+          style={{
+            display: 'flex',
+            gap: '0.75rem',
+            alignItems: 'center',
+          }}
+        >
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.65rem',
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-md)',
+            padding: '0.65rem 1rem',
+            boxShadow: 'var(--shadow-sm)',
+          }}>
+            <Search size={18} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+            <input
+              type="text"
+              placeholder="Search by item title, category, description, or campus location..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search items"
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: 'var(--text-primary)',
+                fontSize: '0.9rem',
+              }}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                title="Clear search"
+                aria-label="Clear search"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0.2rem',
+                }}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate(`/items?search=${encodeURIComponent(searchQuery)}${selectedCategory ? `&category=${encodeURIComponent(selectedCategory)}` : ''}`)}
+            className="btn btn-secondary"
+            style={{ height: 44, padding: '0 1rem' }}
+            title="Open advanced filter options"
+          >
+            <SlidersHorizontal size={16} /> Filters
+          </button>
+        </form>
+
+        {/* Quick Status Filters (Point 10) */}
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className={`filter-chip ${statusFilter === 'ALL' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('ALL')}
+          >
+            All Items ({items.length})
+          </button>
+          <button
+            type="button"
+            className={`filter-chip ${statusFilter === 'LOST' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('LOST')}
+          >
+            Lost ({items.filter((i) => i.type === 'LOST').length})
+          </button>
+          <button
+            type="button"
+            className={`filter-chip ${statusFilter === 'FOUND' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('FOUND')}
+          >
+            Found ({items.filter((i) => i.type === 'FOUND').length})
+          </button>
+
+          {(selectedCategory || searchQuery || statusFilter !== 'ALL') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory(null);
+                setSearchQuery('');
+                setStatusFilter('ALL');
+              }}
+              style={{
+                marginLeft: 'auto',
+                fontSize: '0.775rem',
+                color: 'var(--accent-coral)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+              }}
+            >
+              <X size={14} /> Clear active filters
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Browse Categories Row (Point 3: uniform size & Point 9: functional filter) */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+          <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+            Browse Categories
+          </h2>
+          {selectedCategory && (
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Filtering: <strong style={{ color: 'var(--accent-blue)' }}>{selectedCategory}</strong>
+            </span>
+          )}
         </div>
 
-        <button
-          type="submit"
-          className="btn btn-secondary"
-          style={{ height: 44, padding: '0 1rem' }}
-        >
-          <SlidersHorizontal size={16} /> Filters
-        </button>
-      </form>
+        <div style={{ display: 'flex', gap: '0.85rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+          {/* All Categories Option */}
+          <div
+            onClick={() => setSelectedCategory(null)}
+            className="category-tile"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedCategory(null); }}
+            aria-label="All Categories"
+            aria-pressed={selectedCategory === null}
+          >
+            <div className="category-icon-box" style={{ backgroundColor: '#1E293B' }}>
+              <LayoutGrid size={20} />
+            </div>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center' }}>
+              All
+            </span>
+          </div>
 
-      {/* Browse Categories Row (Screen 3) */}
-      <div>
-        <h2 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '0.85rem', color: 'var(--text-primary)' }}>
-          Browse Categories
-        </h2>
-
-        <div style={{ display: 'flex', gap: '0.85rem', overflowX: 'auto', paddingBottom: '0.35rem' }}>
           {categories.map((cat) => (
             <div
               key={cat}
-              onClick={() => navigate(`/items?category=${encodeURIComponent(cat)}`)}
-              className="category-tile"
+              onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+              className={`category-tile ${selectedCategory === cat ? 'active' : ''}`}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedCategory(selectedCategory === cat ? null : cat); }}
+              aria-label={`Category ${cat}`}
+              aria-pressed={selectedCategory === cat}
             >
               <div
                 className="category-icon-box"
@@ -372,31 +498,81 @@ export const Home = () => {
         </div>
       </div>
 
-      {/* Recent Listings Section (Screen 3) */}
+      {/* Recent Listings Section (Point 12, 15, 16, 19, 21) */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-          <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-            Recent Listings
-          </h2>
-          <Link to="/items" style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--accent-blue)' }}>
-            View all
+          <div>
+            <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Recent Listings
+            </h2>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Showing {filteredItems.length} open {filteredItems.length === 1 ? 'item' : 'items'}
+              {selectedCategory && ` in ${selectedCategory}`}
+            </span>
+          </div>
+          <Link 
+            to={selectedCategory ? `/items?category=${encodeURIComponent(selectedCategory)}` : '/items'} 
+            style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--accent-blue)' }}
+          >
+            View all →
           </Link>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Loading recent listings...
+          <div style={{ textAlign: 'center', padding: '3.5rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="spin-animation" style={{ color: 'var(--accent-blue)', display: 'flex' }}>
+              <Sparkles size={28} />
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Loading campus listings...</p>
           </div>
-        ) : items.length === 0 ? (
-          <div className="surface-card" style={{ textAlign: 'center', padding: '3rem 1.5rem' }}>
-            <p style={{ color: 'var(--text-secondary)' }}>No open listings right now.</p>
-            <Link to="/post" className="btn btn-primary btn-sm" style={{ marginTop: '0.85rem' }}>
-              <Plus size={14} /> Report an Item
-            </Link>
+        ) : filteredItems.length === 0 ? (
+          <div className="surface-card" style={{ textAlign: 'center', padding: '3.5rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              width: 52,
+              height: 52,
+              borderRadius: '50%',
+              backgroundColor: 'var(--bg-elevated)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-muted)',
+            }}>
+              <Search size={24} />
+            </div>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              No matching listings found
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', maxWidth: 440 }}>
+              {searchQuery || selectedCategory || statusFilter !== 'ALL'
+                ? `No items match your active filters (${[
+                    searchQuery ? `query "${searchQuery}"` : null,
+                    selectedCategory ? `category "${selectedCategory}"` : null,
+                    statusFilter !== 'ALL' ? `type "${statusFilter}"` : null
+                  ].filter(Boolean).join(', ')}).`
+                : 'There are currently no open listings on campus.'}
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {(searchQuery || selectedCategory || statusFilter !== 'ALL') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory(null);
+                    setStatusFilter('ALL');
+                  }}
+                  className="btn btn-secondary btn-sm"
+                >
+                  Reset Filters
+                </button>
+              )}
+              <Link to="/post" className="btn btn-primary btn-sm">
+                <Plus size={14} /> Report Item
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid-cards">
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <ItemCard key={item.id} item={item} />
             ))}
           </div>

@@ -1,7 +1,6 @@
 package com.campustrack.controller;
 
-import com.campustrack.dto.ApiResponse;
-import com.campustrack.dto.MessageDTOs.*;
+import com.campustrack.dto.*;
 import com.campustrack.entity.User;
 import com.campustrack.service.AuthService;
 import com.campustrack.service.MessageService;

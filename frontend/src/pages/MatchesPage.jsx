@@ -66,13 +66,24 @@ export const MatchesPage = () => {
     navigate(`/messages?userId=${targetUserId}`);
   };
 
-  const filteredMatches = matches.filter((m) => {
+  const validMatches = matches.filter((m) => m.lostItemId !== m.foundItemId);
+
+  const allCount = validMatches.length;
+  const suggestedCount = validMatches.filter((m) => m.status === 'SUGGESTED').length;
+  const confirmedCount = validMatches.filter((m) => m.status === 'CONFIRMED').length;
+  const rejectedCount = validMatches.filter((m) => m.status === 'REJECTED').length;
+
+  const filteredMatches = validMatches.filter((m) => {
     if (activeTab === 'ALL') return true;
     return m.status === activeTab;
   });
 
-  const suggestedCount = matches.filter(m => m.status === 'SUGGESTED').length;
-  const confirmedCount = matches.filter(m => m.status === 'CONFIRMED').length;
+  // Sort matches by compatibility score descending so high confidence pairs appear first
+  const sortedMatches = [...filteredMatches].sort((a, b) => {
+    const scoreA = a.matchPercentage ?? (a.matchScore ? a.matchScore * 100 : 0);
+    const scoreB = b.matchPercentage ?? (b.matchScore ? b.matchScore * 100 : 0);
+    return scoreB - scoreA;
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -84,13 +95,13 @@ export const MatchesPage = () => {
         </p>
       </div>
 
-      {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '2px solid var(--border-subtle)', paddingBottom: '0.25rem' }}>
+      {/* Filter Tabs with Synchronized Counts */}
+      <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '2px solid var(--border-subtle)', paddingBottom: '0.25rem', overflowX: 'auto' }}>
         <button
           onClick={() => setActiveTab('ALL')}
           className={`tab-chip ${activeTab === 'ALL' ? 'active' : ''}`}
         >
-          All Matches ({matches.length})
+          All Matches ({allCount})
         </button>
         <button
           onClick={() => setActiveTab('SUGGESTED')}
@@ -104,13 +115,21 @@ export const MatchesPage = () => {
         >
           Confirmed ({confirmedCount})
         </button>
+        {rejectedCount > 0 && (
+          <button
+            onClick={() => setActiveTab('REJECTED')}
+            className={`tab-chip ${activeTab === 'REJECTED' ? 'active' : ''}`}
+          >
+            Rejected ({rejectedCount})
+          </button>
+        )}
       </div>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
           Searching for potential matches...
         </div>
-      ) : filteredMatches.length === 0 ? (
+      ) : sortedMatches.length === 0 ? (
         <div className="surface-card" style={{ textAlign: 'center', padding: '3.5rem 1.5rem', backgroundColor: 'var(--bg-surface)' }}>
           <Sparkles size={40} color="var(--accent-blue)" style={{ margin: '0 auto 0.75rem', opacity: 0.6 }} />
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.35rem' }}>
@@ -125,7 +144,7 @@ export const MatchesPage = () => {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {filteredMatches.map((match) => (
+          {sortedMatches.map((match) => (
             <MatchCard
               key={match.id}
               match={match}

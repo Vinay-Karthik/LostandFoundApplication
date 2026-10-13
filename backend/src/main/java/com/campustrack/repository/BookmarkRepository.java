@@ -20,4 +20,8 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     boolean existsByUserIdAndItemId(Long userId, Long itemId);
 
     void deleteByUserIdAndItemId(Long userId, Long itemId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM Bookmark b WHERE b.item.id = :itemId")
+    void deleteByItemId(@Param("itemId") Long itemId);
 }

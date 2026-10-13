@@ -5,10 +5,10 @@ import { useTheme } from '../context/ThemeContext';
 import { useWebSocket } from '../context/WebSocketContext';
 import { messageApi } from '../api/messageApi';
 import { 
-  Compass, Plus, Bell, X, Moon, Sun 
+  Compass, Plus, Bell, X, Moon, Sun, Menu 
 } from 'lucide-react';
 
-export const Navbar = () => {
+export const Navbar = ({ onToggleSidebar, isSidebarOpen }) => {
   const { user, isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { incomingMessage } = useWebSocket();
@@ -180,8 +180,27 @@ export const Navbar = () => {
         margin: '0 auto',
         width: '100%',
       }}>
-        {/* Left: Subtle Campus Breadcrumb/Indicator */}
+        {/* Left: Subtle Campus Breadcrumb/Indicator and Mobile Hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <button
+            type="button"
+            className="mobile-menu-btn"
+            onClick={onToggleSidebar}
+            aria-label="Toggle navigation menu"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)',
+              backgroundColor: 'var(--bg-surface)',
+              color: 'var(--text-primary)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <Menu size={18} />
+          </button>
           <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
             Campus<span style={{ color: 'var(--accent-blue)' }}>Track</span>
           </span>
@@ -192,13 +211,16 @@ export const Navbar = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <Link 
-            to="/post" 
-            className="btn btn-primary"
-            style={{ borderRadius: 'var(--radius-md)', padding: '0.55rem 1.15rem' }}
-          >
-            <Plus size={16} strokeWidth={2.4} /> Report Item
-          </Link>
+          {/* Hide duplicate button on Home and My Posts which have their own prominent Report Item button */}
+          {location.pathname !== '/' && location.pathname !== '/my-items' && (
+            <Link 
+              to="/post" 
+              className="btn btn-primary"
+              style={{ borderRadius: 'var(--radius-md)', padding: '0.55rem 1.15rem' }}
+            >
+              <Plus size={16} strokeWidth={2.4} /> Report Item
+            </Link>
+          )}
 
           {/* Theme Toggle */}
           <button

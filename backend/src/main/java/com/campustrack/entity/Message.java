@@ -32,6 +32,7 @@ public class Message {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
+    @Builder.Default
     @Column(name = "is_read", nullable = false)
     private Boolean isRead = false;
 

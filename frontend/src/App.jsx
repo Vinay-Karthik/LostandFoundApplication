@@ -39,13 +39,19 @@ const AppLayout = () => {
     );
   }
 
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
   // If authenticated: Sidebar + Top Header + Content
   if (isAuthenticated) {
     return (
       <div className="authenticated-layout">
-        <Sidebar />
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="content-wrapper">
-          <Navbar />
+          <Navbar onToggleSidebar={() => setSidebarOpen((prev) => !prev)} isSidebarOpen={sidebarOpen} />
           <main className="main-content">
             <Routes>
               <Route path="/" element={<Home />} />

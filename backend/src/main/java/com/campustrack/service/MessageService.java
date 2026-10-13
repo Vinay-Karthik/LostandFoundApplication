@@ -1,6 +1,6 @@
 package com.campustrack.service;
 
-import com.campustrack.dto.MessageDTOs.*;
+import com.campustrack.dto.*;
 import com.campustrack.entity.Message;
 import com.campustrack.entity.User;
 import com.campustrack.entity.UserBlock;

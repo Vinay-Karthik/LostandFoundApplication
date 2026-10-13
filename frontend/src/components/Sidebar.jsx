@@ -6,10 +6,10 @@ import { useWebSocket } from '../context/WebSocketContext';
 import { messageApi } from '../api/messageApi';
 import { 
   Home, Search, Package, MessageSquare, Sparkles, 
-  User, ShieldCheck, LogOut, Compass, Moon, Sun, Bookmark 
+  User, ShieldCheck, LogOut, Compass, Moon, Sun, Bookmark, X 
 } from 'lucide-react';
 
-export const Sidebar = () => {
+export const Sidebar = ({ isOpen, onClose }) => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { incomingMessage } = useWebSocket();
@@ -53,30 +53,56 @@ export const Sidebar = () => {
   if (!isAuthenticated) return null;
 
   return (
-    <aside className="sidebar-nav">
-      {/* Brand Logo & Title */}
-      <Link to="/" className="sidebar-brand">
-        <div className="sidebar-brand-icon">
-          <Compass size={18} strokeWidth={2.4} />
+    <>
+      {isOpen && (
+        <div 
+          className="mobile-backdrop" 
+          onClick={onClose} 
+          aria-hidden="true" 
+        />
+      )}
+      <aside className={`sidebar-nav ${isOpen ? 'mobile-open' : ''}`}>
+        {/* Brand Logo & Title */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+          <Link to="/" className="sidebar-brand" onClick={onClose} style={{ padding: '0.4rem 0' }}>
+            <div className="sidebar-brand-icon">
+              <Compass size={18} strokeWidth={2.4} />
+            </div>
+            <span className="sidebar-brand-name">
+              Campus<span style={{ color: 'var(--accent-blue)' }}>Lost&Found</span>
+            </span>
+          </Link>
+          <button 
+            type="button"
+            className="mobile-close-btn" 
+            onClick={onClose}
+            aria-label="Close sidebar menu"
+            style={{
+              padding: '0.35rem',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              borderRadius: 'var(--radius-sm)',
+            }}
+          >
+            <X size={20} />
+          </button>
         </div>
-        <span className="sidebar-brand-name">
-          Campus<span style={{ color: 'var(--accent-blue)' }}>Lost&Found</span>
-        </span>
-      </Link>
 
-      {/* Navigation Menu */}
-      <nav className="sidebar-menu">
-        <NavLink 
-          to="/" 
-          end
-          className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
-        >
-          <Home size={18} />
-          <span>Home</span>
+        {/* Navigation Menu */}
+        <nav className="sidebar-menu">
+          <NavLink 
+            to="/" 
+            end
+            onClick={onClose}
+            className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
+          >
+            <Home size={18} />
+            <span>Home</span>
         </NavLink>
 
         <NavLink 
           to="/items" 
+          onClick={onClose}
           className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
         >
           <Search size={18} />
@@ -85,6 +111,7 @@ export const Sidebar = () => {
 
         <NavLink 
           to="/my-items" 
+          onClick={onClose}
           className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
         >
           <Package size={18} />
@@ -93,6 +120,7 @@ export const Sidebar = () => {
 
         <NavLink 
           to="/messages" 
+          onClick={onClose}
           className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
         >
           <MessageSquare size={18} />
@@ -114,6 +142,7 @@ export const Sidebar = () => {
 
         <NavLink 
           to="/matches" 
+          onClick={onClose}
           className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
         >
           <Sparkles size={18} />
@@ -122,6 +151,7 @@ export const Sidebar = () => {
 
         <NavLink 
           to="/bookmarks" 
+          onClick={onClose}
           className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
         >
           <Bookmark size={18} />
@@ -130,6 +160,7 @@ export const Sidebar = () => {
 
         <NavLink 
           to="/profile" 
+          onClick={onClose}
           className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
         >
           <User size={18} />
@@ -139,6 +170,7 @@ export const Sidebar = () => {
         {isAdmin && (
           <NavLink 
             to="/admin" 
+            onClick={onClose}
             className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
           >
             <ShieldCheck size={18} />
@@ -172,5 +204,6 @@ export const Sidebar = () => {
         </button>
       </div>
     </aside>
+    </>
   );
 };

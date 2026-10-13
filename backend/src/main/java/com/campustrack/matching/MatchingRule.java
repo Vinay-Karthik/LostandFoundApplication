@@ -1,3 +1,4 @@
+
 package com.campustrack.matching;
 
 import com.campustrack.entity.LostFoundItem;
@@ -13,6 +14,15 @@ public interface MatchingRule {
     String getRuleName();
 
     default boolean isApplicable(LostFoundItem item1, LostFoundItem item2) {
+        if (item1 == null || item2 == null) {
+            return false;
+        }
+        if (item1.getId() != null && item1.getId().equals(item2.getId())) {
+            return false;
+        }
+        if (item1.getType() != null && item2.getType() != null && item1.getType().equalsIgnoreCase(item2.getType())) {
+            return false;
+        }
         return true;
     }
 }

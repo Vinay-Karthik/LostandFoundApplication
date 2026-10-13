@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-let authToken = null;
+let authToken = typeof window !== 'undefined'
+  ? (localStorage.getItem('ct_token') || sessionStorage.getItem('ct_token'))
+  : null;
 
 export const setAuthToken = (token) => {
   authToken = token;
@@ -21,8 +23,11 @@ const axiosClient = axios.create({
 });
 
 axiosClient.interceptors.request.use((config) => {
-  if (authToken) {
-    config.headers.Authorization = `Bearer ${authToken}`;
+  const token = authToken || (typeof window !== 'undefined' 
+    ? (localStorage.getItem('ct_token') || sessionStorage.getItem('ct_token')) 
+    : null);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 }, (error) => Promise.reject(error));

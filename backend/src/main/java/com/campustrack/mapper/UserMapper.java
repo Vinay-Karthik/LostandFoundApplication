@@ -1,8 +1,8 @@
 package com.campustrack.mapper;
 
-import com.campustrack.dto.AuthDTOs.AuthResponse;
-import com.campustrack.dto.AuthDTOs.PublicUserDTO;
-import com.campustrack.dto.AuthDTOs.UserDTO;
+import com.campustrack.dto.AuthResponse;
+import com.campustrack.dto.PublicUserDTO;
+import com.campustrack.dto.UserDTO;
 import com.campustrack.entity.User;
 import org.springframework.stereotype.Component;
 

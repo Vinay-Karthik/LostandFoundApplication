@@ -22,6 +22,10 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     long countByStatus(String status);
 
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM Match m WHERE m.lostItem.id = :itemId OR m.foundItem.id = :itemId")
+    void deleteMatchesByItemId(@Param("itemId") Long itemId);
+
     @Query("SELECT m FROM Match m WHERE (m.lostItem.user.id = :userId OR m.foundItem.user.id = :userId) ORDER BY m.createdAt DESC")
     List<Match> findMatchesByUserId(@Param("userId") Long userId);
 

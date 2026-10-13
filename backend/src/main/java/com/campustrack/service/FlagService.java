@@ -1,6 +1,6 @@
 package com.campustrack.service;
 
-import com.campustrack.dto.FlagDTOs.*;
+import com.campustrack.dto.*;
 import com.campustrack.entity.Flag;
 import com.campustrack.entity.LostFoundItem;
 import com.campustrack.entity.User;

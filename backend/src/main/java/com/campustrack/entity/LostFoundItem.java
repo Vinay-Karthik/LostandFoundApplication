@@ -45,8 +45,9 @@ public class LostFoundItem {
     @Column(columnDefinition = "TEXT")
     private String tags; // comma-separated lowercase tags
 
+    @Builder.Default
     @Column(nullable = false)
-    private String status; // 'OPEN' | 'MATCHED' | 'RESOLVED' | 'REMOVED'
+    private String status = "OPEN"; // 'OPEN' | 'MATCHED' | 'RESOLVED' | 'REMOVED'
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

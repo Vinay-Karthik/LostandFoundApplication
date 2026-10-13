@@ -29,6 +29,7 @@ public class Flag {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String reason;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean reviewed = false;
 

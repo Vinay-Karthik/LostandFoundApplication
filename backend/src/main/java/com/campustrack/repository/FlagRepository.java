@@ -21,4 +21,8 @@ public interface FlagRepository extends JpaRepository<Flag, Long> {
 
     @Query("SELECT f FROM Flag f WHERE f.item.id = :itemId")
     List<Flag> findByItemId(@Param("itemId") Long itemId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM Flag f WHERE f.item.id = :itemId")
+    void deleteByItemId(@Param("itemId") Long itemId);
 }

@@ -1,6 +1,6 @@
 package com.campustrack.service;
 
-import com.campustrack.dto.MatchDTOs.MatchResponse;
+import com.campustrack.dto.MatchResponse;
 import com.campustrack.entity.LostFoundItem;
 import com.campustrack.entity.Match;
 import com.campustrack.entity.User;
@@ -67,6 +67,13 @@ public class MatchingService {
         List<LostFoundItem> potentialItems = itemRepository.findPotentialMatchesFor(oppositeType, newItem.getId());
 
         for (LostFoundItem candidate : potentialItems) {
+            if (candidate == null || candidate.getId() == null || candidate.getId().equals(newItem.getId())) {
+                continue;
+            }
+            if (candidate.getType() != null && candidate.getType().equalsIgnoreCase(newItem.getType())) {
+                continue;
+            }
+
             LostFoundItem lostItem = ItemType.LOST.name().equalsIgnoreCase(newItem.getType()) ? newItem : candidate;
             LostFoundItem foundItem = ItemType.FOUND.name().equalsIgnoreCase(newItem.getType()) ? newItem : candidate;
 
@@ -100,6 +107,12 @@ public class MatchingService {
 
     public float calculateMatchScore(LostFoundItem item1, LostFoundItem item2) {
         if (item1 == null || item2 == null) {
+            return 0.0f;
+        }
+        if (item1.getId() != null && item1.getId().equals(item2.getId())) {
+            return 0.0f;
+        }
+        if (item1.getType() != null && item2.getType() != null && item1.getType().equalsIgnoreCase(item2.getType())) {
             return 0.0f;
         }
 

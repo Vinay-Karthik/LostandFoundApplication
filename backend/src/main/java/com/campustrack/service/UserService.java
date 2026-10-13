@@ -1,6 +1,6 @@
 package com.campustrack.service;
 
-import com.campustrack.dto.AuthDTOs.*;
+import com.campustrack.dto.*;
 import com.campustrack.entity.User;
 import com.campustrack.exception.CustomExceptions.*;
 import com.campustrack.mapper.UserMapper;

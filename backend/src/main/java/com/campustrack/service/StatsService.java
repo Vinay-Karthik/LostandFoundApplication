@@ -1,6 +1,6 @@
 package com.campustrack.service;
 
-import com.campustrack.dto.StatsDTOs.*;
+import com.campustrack.dto.*;
 import com.campustrack.repository.FlagRepository;
 import com.campustrack.repository.ItemRepository;
 import com.campustrack.repository.MatchRepository;
