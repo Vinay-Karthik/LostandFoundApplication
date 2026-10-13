@@ -43,6 +43,8 @@ public interface ItemRepository extends JpaRepository<LostFoundItem, Long> {
 
     List<LostFoundItem> findByUserIdOrderByCreatedAtDesc(Long userId);
 
+    Page<LostFoundItem> findByStatus(String status, Pageable pageable);
+
     @Query("SELECT i FROM LostFoundItem i WHERE i.type = :oppositeType AND i.status = 'OPEN' AND i.id <> :excludeId")
     List<LostFoundItem> findPotentialMatchesFor(
             @Param("oppositeType") String oppositeType,
