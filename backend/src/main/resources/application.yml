@@ -1,0 +1,60 @@
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: campustrack-backend
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/campustrack?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:vinaykarthikkarthik@gmail.com}
+    password: ${MAIL_PASSWORD:tdgdibvlhalityhb}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+# Application custom properties
+campustrack:
+  jwt:
+    secret: ${JWT_SECRET:CampusTrackSuperSecretJwtSigningKeyMustBe256BitsLongForHmacSha256Security2026}
+    expiration-ms: ${JWT_EXPIRATION_MS:604800000} # 7 days (604,800,000 ms)
+  campus:
+    allowed-domains: ${CAMPUS_ALLOWED_DOMAINS:svce.edu.in}
+  imagekit:
+    private-key: ${IMAGEKIT_PRIVATE_KEY:private_C36vB/0tplL6GqemVH6yfMgR0qU=}
+    public-key: ${IMAGEKIT_PUBLIC_KEY:}
+    url-endpoint: ${IMAGEKIT_URL_ENDPOINT:https://ik.imagekit.io/campustrack}
+    upload-endpoint: https://upload.imagekit.io/api/v1/files/upload
+  upload:
+    local-dir: ${LOCAL_UPLOAD_DIR:./uploads}
+
+logging:
+  level:
+    root: INFO
+    com.campustrack: DEBUG

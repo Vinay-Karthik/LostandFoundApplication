@@ -1,0 +1,34 @@
+# Environment & secrets
+.env
+.env*.local
+*.env
+!*.env.example
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+dist/
+dist.zip
+frontend/dist/
+frontend/dist.zip
+.vercel/
+frontend/.vercel/
+
+# Java / Maven / Backend
+target/
+backend/target/
+*.class
+backend/uploads/
+uploads/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# System & logs
+*.log
+.DS_Store
+Thumbs.db
