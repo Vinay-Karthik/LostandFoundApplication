@@ -67,8 +67,7 @@ public class LostFoundItem {
      * Excludes personal data such as the reporter's name and user ID.
      */
     public String toEmbeddingText() {
-        return "Type: " + safe(type)
-                + ". Item: " + safe(title)
+        return "Item: " + safe(title)
                 + ". Description: " + safe(description)
                 + ". Category: " + safe(category)
                 + ". Tags: " + safe(tags)
