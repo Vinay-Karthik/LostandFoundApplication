@@ -13,12 +13,14 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Creates asymmetric query/passage embeddings through NVIDIA's OpenAI-compatible API.
- * Keep credentials in environment variables and never log authorization headers.
+ * NVIDIA's OpenAI-compatible, asymmetric text embedding client.
+ * Passage vectors are for indexing; query vectors are for retrieval.
  */
 @Service
 public class NemotronEmbeddingService {
@@ -47,24 +49,34 @@ public class NemotronEmbeddingService {
     }
 
     public float[] embedQuery(String text) {
-        return embed(text, "query");
+        return embedBatch(List.of(requireText(text)), "query").get(0);
     }
 
     public float[] embedPassage(String text) {
-        return embed(text, "passage");
+        return embedBatch(List.of(requireText(text)), "passage").get(0);
     }
 
-    private float[] embed(String text, String inputType) {
+    /** One API call for a page of passages; useful for backfilling older records. */
+    public List<float[]> embedPassages(List<String> texts) {
+        if (texts == null || texts.isEmpty()) return List.of();
+        return embedBatch(texts.stream().map(this::requireText).toList(), "passage");
+    }
+
+    private String requireText(String text) {
+        if (text == null || text.isBlank()) {
+            throw new IllegalArgumentException("Text to embed must not be blank");
+        }
+        return text;
+    }
+
+    private List<float[]> embedBatch(List<String> texts, String inputType) {
         if (apiKey == null || apiKey.isBlank()) {
             throw new EmbeddingUnavailableException(
                     "NVIDIA API key is not configured. Set NVIDIA_API_KEY.", null);
         }
-        if (text == null || text.isBlank()) {
-            throw new IllegalArgumentException("Text to embed must not be blank");
-        }
 
         Map<String, Object> body = Map.of(
-                "input", List.of(text),
+                "input", texts,
                 "model", model,
                 "input_type", inputType,
                 "encoding_format", "float"
@@ -80,26 +92,53 @@ public class NemotronEmbeddingService {
                     .retrieve()
                     .body(String.class);
 
-            JsonNode embedding = mapper.readTree(json).path("data").path(0).path("embedding");
-            if (!embedding.isArray() || embedding.isEmpty()) {
+            if (json == null || json.isBlank()) {
                 throw new EmbeddingUnavailableException(
-                        "NVIDIA returned an empty embedding vector.", null);
+                        "NVIDIA returned an empty response.", null);
             }
 
-            float[] vector = new float[embedding.size()];
-            for (int i = 0; i < embedding.size(); i++) {
-                JsonNode value = embedding.get(i);
-                if (!value.isNumber()) {
-                    throw new EmbeddingUnavailableException(
-                            "NVIDIA returned a malformed embedding vector.", null);
-                }
-                vector[i] = (float) value.asDouble();
-                if (!Float.isFinite(vector[i])) {
-                    throw new EmbeddingUnavailableException(
-                            "NVIDIA returned a non-finite embedding value.", null);
-                }
+            JsonNode data = mapper.readTree(json).path("data");
+            if (!data.isArray() || data.size() != texts.size()) {
+                throw new EmbeddingUnavailableException(
+                        "NVIDIA returned an unexpected number of embeddings.", null);
             }
-            return vector;
+
+            List<float[]> vectors = new ArrayList<>(
+                    Collections.nCopies(texts.size(), null));
+
+            for (int i = 0; i < data.size(); i++) {
+                JsonNode row = data.get(i);
+                int index = row.path("index").asInt(i);
+                JsonNode embedding = row.path("embedding");
+
+                if (index < 0 || index >= texts.size()
+                        || vectors.get(index) != null
+                        || !embedding.isArray() || embedding.isEmpty()) {
+                    throw new EmbeddingUnavailableException(
+                            "NVIDIA returned malformed embedding data.", null);
+                }
+
+                float[] vector = new float[embedding.size()];
+                for (int j = 0; j < embedding.size(); j++) {
+                    JsonNode value = embedding.get(j);
+                    if (!value.isNumber()) {
+                        throw new EmbeddingUnavailableException(
+                                "NVIDIA returned a non-numeric embedding value.", null);
+                    }
+                    vector[j] = (float) value.asDouble();
+                    if (!Float.isFinite(vector[j])) {
+                        throw new EmbeddingUnavailableException(
+                                "NVIDIA returned a non-finite embedding value.", null);
+                    }
+                }
+                vectors.set(index, vector);
+            }
+
+            if (vectors.stream().anyMatch(v -> v == null)) {
+                throw new EmbeddingUnavailableException(
+                        "NVIDIA response omitted one or more embeddings.", null);
+            }
+            return List.copyOf(vectors);
         } catch (RestClientException | JsonProcessingException ex) {
             throw new EmbeddingUnavailableException(
                     "NVIDIA embedding request failed. Check the API key, model access, and service status.", ex);
