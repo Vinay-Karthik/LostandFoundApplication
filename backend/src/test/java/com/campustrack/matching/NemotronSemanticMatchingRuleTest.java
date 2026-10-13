@@ -21,8 +21,8 @@ class NemotronSemanticMatchingRuleTest {
 
     @Test
     void identicalVectorsProducePerfectSemanticScore() {
-        LostFoundItem a = item(new float[]{1, 0});
-        LostFoundItem b = item(new float[]{1, 0});
+        LostFoundItem a = item(new float[]{1, 0}, "LOST");
+        LostFoundItem b = item(new float[]{1, 0}, "FOUND");
 
         assertTrue(rule.isApplicable(a, b));
         assertEquals(1.0, rule.computeScore(a, b), 1e-9);
@@ -30,8 +30,8 @@ class NemotronSemanticMatchingRuleTest {
 
     @Test
     void orthogonalVectorsProduceZeroSemanticScore() {
-        LostFoundItem a = item(new float[]{1, 0});
-        LostFoundItem b = item(new float[]{0, 1});
+        LostFoundItem a = item(new float[]{1, 0}, "LOST");
+        LostFoundItem b = item(new float[]{0, 1}, "FOUND");
 
         assertEquals(0.0, rule.computeScore(a, b), 1e-9);
     }
@@ -39,13 +39,14 @@ class NemotronSemanticMatchingRuleTest {
     @Test
     void missingLegacyEmbeddingsMakeRuleInapplicable() {
         LostFoundItem legacy = LostFoundItem.builder().title("Black bottle").build();
-        LostFoundItem embedded = item(new float[]{1, 0});
+        LostFoundItem embedded = item(new float[]{1, 0}, "FOUND");
 
         assertFalse(rule.isApplicable(legacy, embedded));
     }
 
-    private LostFoundItem item(float[] vector) {
+    private LostFoundItem item(float[] vector, String type) {
         return LostFoundItem.builder()
+                .type(type)
                 .title("Test item")
                 .embeddingJson(embeddings.serialize(vector))
                 .embeddingModelVersion(embeddings.getModel())
