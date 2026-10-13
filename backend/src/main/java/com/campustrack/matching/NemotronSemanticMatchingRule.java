@@ -57,9 +57,10 @@ public class NemotronSemanticMatchingRule implements MatchingRule {
             return 0.0;
         }
 
-        // Cosine values can be negative. Map [-1,1] to [0,1] for consistency
-        // with the existing matching rules, and keep the returned score bounded.
+        // Existing rules use a [0,1] score. Preserve positive cosine similarity
+        // directly; negative similarity contributes zero rather than appearing
+        // moderately relevant just because cosine's theoretical minimum is -1.
         double cosine = embeddings.cosineSimilarity(a, b);
-        return Math.max(0.0, Math.min(1.0, (cosine + 1.0) / 2.0));
+        return Math.max(0.0, Math.min(1.0, cosine));
     }
 }
