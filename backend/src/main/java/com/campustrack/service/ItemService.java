@@ -221,7 +221,10 @@ public class ItemService {
 
     private void refreshEmbedding(LostFoundItem item) {
         try {
-            float[] vector = nemotronEmbeddingService.embedPassage(item.toEmbeddingText());
+            // Nemotron is asymmetric: LOST is the retrieval query, FOUND is the passage.
+            float[] vector = "LOST".equalsIgnoreCase(item.getType())
+                    ? nemotronEmbeddingService.embedQuery(item.toEmbeddingText())
+                    : nemotronEmbeddingService.embedPassage(item.toEmbeddingText());
             item.setEmbeddingJson(nemotronEmbeddingService.serialize(vector));
             item.setEmbeddingModelVersion(nemotronEmbeddingService.getModel());
         } catch (NemotronEmbeddingService.EmbeddingUnavailableException ex) {
