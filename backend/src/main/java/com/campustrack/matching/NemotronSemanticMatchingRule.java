@@ -32,7 +32,10 @@ public class NemotronSemanticMatchingRule implements MatchingRule {
 
     @Override
     public boolean isApplicable(LostFoundItem a, LostFoundItem b) {
-        return compatibleEmbedding(a) && compatibleEmbedding(b)
+        return a != null && b != null
+                && "LOST".equalsIgnoreCase(a.getType())
+                && "FOUND".equalsIgnoreCase(b.getType())
+                && compatibleEmbedding(a) && compatibleEmbedding(b)
                 && a.getEmbeddingModelVersion().equals(b.getEmbeddingModelVersion())
                 && a.getEmbeddingModelVersion().equals(embeddings.getModel());
     }
