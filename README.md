@@ -101,3 +101,39 @@ cd backend
 mvn test
 ```
 Tests cover campus email validation, BCrypt password security, JWT token validation, and misspelled fuzzy matching algorithms.
+
+
+## NVIDIA Nemotron semantic matching
+
+The backend can add semantic similarity to the existing title, description, category, tags, and location matching rules using `nvidia/nemotron-3-embed-1b`. Existing heuristic matching remains active when embeddings are unavailable.
+
+### Configure
+
+Set `NVIDIA_API_KEY` as an environment variable or deployment secret. Do not commit a real key.
+
+Optional environment variables:
+
+- `NVIDIA_API_URL` (default: `https://integrate.api.nvidia.com/v1/embeddings`)
+- `NVIDIA_EMBEDDING_MODEL` (default: `nvidia/nemotron-3-embed-1b`)
+- `NVIDIA_CONNECT_TIMEOUT_MS` (default: `5000`)
+- `NVIDIA_READ_TIMEOUT_MS` (default: `30000`)
+
+New items are embedded on creation, and searchable fields are re-embedded when updated. Vectors and model version are stored on `lost_found_items` and are excluded from normal API JSON responses.
+
+### Backfill existing items
+
+After setting `NVIDIA_API_KEY`, sign in as an admin and call:
+
+```http
+POST /api/admin/embeddings/backfill?page=0&size=20
+Authorization: Bearer <admin-token>
+```
+
+The endpoint processes up to 25 records in each request, using one embedding API call for the pending records in that page. Follow the returned `nextPage` value until it is `null`. Re-running completed pages is safe; current vectors are skipped.
+
+### Notes
+
+- The API uses `input_type=query` for search/query vectors and `input_type=passage` for stored item vectors.
+- Semantic similarity is an additional score in the existing MatchingService composite, not a generated answer. This project does not need a generative LLM for semantic matching.
+- Match thresholds and weights should be calibrated against reviewed lost/found item pairs before deployment.
+- If NVIDIA is unavailable, item posting continues with the existing heuristic matching rules. Items without a vector will not receive a semantic score until backfilled.
