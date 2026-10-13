@@ -37,7 +37,7 @@ public class AuthService {
     private final UserMapper userMapper;
     private final OtpService otpService;
 
-    @Value("${campustrack.campus.allowed-domains:university.edu,campus.edu,student.edu,college.edu,mit.edu,stanford.edu}")
+    @Value("${campustrack.campus.allowed-domains:gmail.com}")
     private String allowedDomainsConfig;
 
     public boolean isAllowedCampusEmail(String email) {

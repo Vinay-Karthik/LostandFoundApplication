@@ -34,7 +34,7 @@ export const Register = () => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // Step 1: Send OTP to Campus Email
+  // Step 1: Send OTP to Gmail address
   const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password) {
@@ -55,9 +55,9 @@ export const Register = () => {
       const res = await authApi.sendOtp(email.trim().toLowerCase());
       setStep(2);
       setCountdown(300);
-      setSuccessMsg(res.message || 'Verification code sent to your campus email!');
+      setSuccessMsg(res.message || 'Verification code sent to your Gmail address!');
     } catch (err) {
-      setError(err.message || 'Failed to send verification code. Check your campus email.');
+      setError(err.message || 'Failed to send verification code. Check your Gmail address.');
     } finally {
       setLoading(false);
     }
@@ -265,12 +265,12 @@ export const Register = () => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Campus Email (@svce.edu.in)</label>
+                <label className="form-label">Gmail Address</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="email"
                     className="form-input"
-                    placeholder="student@svce.edu.in"
+                    placeholder="yourname@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required

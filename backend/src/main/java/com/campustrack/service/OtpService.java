@@ -30,8 +30,8 @@ public class OtpService {
     @Value("${spring.mail.username:noreply@svce.edu.in}")
     private String senderEmail;
 
-    @Value("${campustrack.campus.allowed-domains:svce.edu.in}")
-    private String allowedDomainsConfig;
+   @Value("${campustrack.campus.allowed-domains:gmail.com}")
+private String allowedDomainsConfig;
 
     private static final long OTP_VALIDITY_SECONDS = 300; // 5 minutes
     private static final SecureRandom RANDOM = new SecureRandom();

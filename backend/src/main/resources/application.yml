@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:8080}
+  port: ${PORT:9090}
   servlet:
     context-path: /
 
@@ -45,7 +45,7 @@ campustrack:
     secret: ${JWT_SECRET:CampusTrackSuperSecretJwtSigningKeyMustBe256BitsLongForHmacSha256Security2026}
     expiration-ms: ${JWT_EXPIRATION_MS:604800000} # 7 days (604,800,000 ms)
   campus:
-    allowed-domains: ${CAMPUS_ALLOWED_DOMAINS:svce.edu.in}
+    allowed-domains: ${CAMPUS_ALLOWED_DOMAINS:gmail.com}
   imagekit:
     private-key: ${IMAGEKIT_PRIVATE_KEY:private_C36vB/0tplL6GqemVH6yfMgR0qU=}
     public-key: ${IMAGEKIT_PUBLIC_KEY:}
@@ -63,7 +63,7 @@ logging:
 nvidia:
   api:
     url: ${NVIDIA_API_URL:https://integrate.api.nvidia.com/v1/embeddings}
-    key: ${NVIDIA_API_KEY:}
+    key: ${NVIDIA_API_KEY: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}
   embedding:
     model: ${NVIDIA_EMBEDDING_MODEL:nvidia/nemotron-3-embed-1b}
     connect-timeout-ms: 5000
