@@ -51,6 +51,15 @@ public class LostFoundItem {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Lob
+    @Column(name = "embedding_json", columnDefinition = "LONGTEXT")
+    private String embeddingJson;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(name = "embedding_model_version", length = 160)
+    private String embeddingModelVersion;
+
     @PrePersist
     protected void onCreate() {
         if (this.createdAt == null) {
@@ -62,5 +71,19 @@ public class LostFoundItem {
         if (this.status == null) {
             this.status = "OPEN";
         }
+    }
+
+    public String toEmbeddingText() {
+        return "Item: " + safe(title)
+                + ". Description: " + safe(description)
+                + ". Category: " + safe(category)
+                + ". Tags: " + safe(tags)
+                + ". Location: " + safe(location);
+    }
+
+    private static String safe(String value) {
+        return value == null || value.isBlank()
+                ? "not specified"
+                : value.trim();
     }
 }

@@ -58,3 +58,13 @@ logging:
   level:
     root: INFO
     com.campustrack: DEBUG
+
+# NVIDIA Nemotron Embeddings
+nvidia:
+  api:
+    url: ${NVIDIA_API_URL:https://integrate.api.nvidia.com/v1/embeddings}
+    key: ${NVIDIA_API_KEY:}
+  embedding:
+    model: ${NVIDIA_EMBEDDING_MODEL:nvidia/nemotron-3-embed-1b}
+    connect-timeout-ms: 5000
+    read-timeout-ms: 30000

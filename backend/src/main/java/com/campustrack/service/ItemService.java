@@ -36,6 +36,7 @@ public class ItemService {
     private final ImageStorageService imageStorageService;
     private final ItemMapper itemMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final NemotronEmbeddingService nemotronEmbeddingService;
 
     public static final List<String> SEED_CATEGORIES = List.of(
             "Electronics", "Documents", "Clothing", "Accessories", "Keys", "Bags", "Other"
@@ -74,6 +75,9 @@ public class ItemService {
                 .status(ItemStatus.OPEN.name())
                 .createdAt(LocalDateTime.now())
                 .build();
+
+        // Generate semantic embedding via Nemotron (if configured)
+        generateAndSetEmbedding(item);
 
         LostFoundItem savedItem = itemRepository.save(item);
 
@@ -184,6 +188,9 @@ public class ItemService {
             item.setImageUrl(request.getImageUrl());
         }
 
+        // Refresh semantic embedding when item details are updated
+        generateAndSetEmbedding(item);
+
         LostFoundItem saved = itemRepository.save(item);
 
         if (ItemStatus.OPEN.name().equalsIgnoreCase(saved.getStatus())) {
@@ -208,6 +215,27 @@ public class ItemService {
     private ItemResponse mapToResponse(LostFoundItem item, Long currentUserId) {
         int matchCount = matchRepository.findMatchesByItemId(item.getId()).size();
         return itemMapper.toResponse(item, currentUserId, matchCount);
+    }
+
+    private void generateAndSetEmbedding(LostFoundItem item) {
+        if (nemotronEmbeddingService == null || !nemotronEmbeddingService.isConfigured()) {
+            return;
+        }
+
+        try {
+            float[] vector = "LOST".equalsIgnoreCase(item.getType())
+                    ? nemotronEmbeddingService.embedQuery(item.toEmbeddingText())
+                    : nemotronEmbeddingService.embedPassage(item.toEmbeddingText());
+
+            item.setEmbeddingJson(nemotronEmbeddingService.serialize(vector));
+            item.setEmbeddingModelVersion(nemotronEmbeddingService.getModel());
+            log.info("Generated Nemotron embedding for item '{}' ({})", item.getTitle(), item.getType());
+        } catch (Exception e) {
+            log.warn("Could not generate Nemotron embedding for item '{}': {}. Proceeding with rule-based matching.",
+                    item.getTitle(), e.getMessage());
+            item.setEmbeddingJson(null);
+            item.setEmbeddingModelVersion(null);
+        }
     }
 
     private String normalizeTags(String tags) {

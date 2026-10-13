@@ -107,6 +107,9 @@ public class MatchingService {
         double totalWeight = 0.0;
 
         for (MatchingRule rule : matchingRules) {
+            if (!rule.isApplicable(item1, item2)) {
+                continue;
+            }
             double ruleScore = rule.computeScore(item1, item2);
             double weight = rule.getWeight();
             totalWeightedScore += (ruleScore * weight);

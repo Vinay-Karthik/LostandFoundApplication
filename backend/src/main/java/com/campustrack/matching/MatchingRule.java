@@ -11,4 +11,8 @@ public interface MatchingRule {
     double computeScore(LostFoundItem item1, LostFoundItem item2);
     double getWeight();
     String getRuleName();
+
+    default boolean isApplicable(LostFoundItem item1, LostFoundItem item2) {
+        return true;
+    }
 }
