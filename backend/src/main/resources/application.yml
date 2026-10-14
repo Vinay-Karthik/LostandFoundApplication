@@ -9,8 +9,8 @@ spring:
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/campustrack?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
-    username: ${SPRING_DATASOURCE_USERNAME:root}
-    password: ${SPRING_DATASOURCE_PASSWORD:123456}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -29,8 +29,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:vinaykarthikkarthik@gmail.com}
-    password: ${MAIL_PASSWORD:xblxvdvdhokcivhc}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -47,9 +47,9 @@ campustrack:
   campus:
     allowed-domains: ${CAMPUS_ALLOWED_DOMAINS:gmail.com}
   imagekit:
-    private-key: ${IMAGEKIT_PRIVATE_KEY:private_C36vB/0tplL6GqemVH6yfMgR0qU=}
+    private-key: ${IMAGEKIT_PRIVATE_KEY}
     public-key: ${IMAGEKIT_PUBLIC_KEY:}
-    url-endpoint: ${IMAGEKIT_URL_ENDPOINT:https://ik.imagekit.io/campustrack}
+    url-endpoint: ${IMAGEKIT_URL_ENDPOINT}
     upload-endpoint: https://upload.imagekit.io/api/v1/files/upload
   upload:
     local-dir: ${LOCAL_UPLOAD_DIR:./uploads}
@@ -63,7 +63,7 @@ logging:
 nvidia:
   api:
     url: ${NVIDIA_API_URL:https://integrate.api.nvidia.com/v1/embeddings}
-    key: ${NVIDIA_API_KEY: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}
+    key: ${NVIDIA_API_KEY:}
   embedding:
     model: ${NVIDIA_EMBEDDING_MODEL:nvidia/nemotron-3-embed-1b}
     connect-timeout-ms: 5000
